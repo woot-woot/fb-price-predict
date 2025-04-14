@@ -1,9 +1,9 @@
 'use client';
 
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect } from 'graz';
 
-export function Profile() {
-  const { address } = useAccount();
+export function CosmProfile() {
+  const { data: account } = useAccount();
   const { disconnect } = useDisconnect();
 
   return (
@@ -11,7 +11,7 @@ export function Profile() {
       <div className="flex justify-between items-center">
         <div className="text-sm text-gray-700">
           <p className="font-medium">Connected Wallet:</p>
-          <p className="text-xs break-all">{address}</p>
+          <p className="text-xs break-all">{account?.bech32Address}</p>
         </div>
         <button
           onClick={() => disconnect()}
