@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 export default function PredictionForm() {
   const [prediction, setPrediction] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const client = useClient();
 
@@ -32,8 +33,9 @@ export default function PredictionForm() {
     // const SUBMIT_ANSWER_DEADLINE = 300; // ! UPDATE
     // const targetHeight = request.startBlock + SUBMIT_ANSWER_DEADLINE; // ! correct targetHeight?
 
-    const targetHeight = getNextFridayDeadline().getTime();
+    const targetHeight = getNextFridayDeadline().getTime() / 1000;
 
+    console.log(targetHeight);
     let nonceUsing = 0;
 
     const {
@@ -149,9 +151,17 @@ export default function PredictionForm() {
 
   const handleSubmit = async () => {
     // TODO: use ibe.ts to encrypt the prediction and submit
-    await submitOnChain({ prediction: parseFloat(prediction), startBlock: 0 });
-    localStorage.setItem('btc-prediction-submitted', 'true');
+    setIsSending(true);
 
+    try {
+      await submitOnChain({ prediction: parseFloat(prediction), startBlock: 0 });
+      localStorage.setItem('btc-prediction-submitted', 'true');
+    } catch (error) {
+      console.error('failed to submit', error);
+    } finally {
+      setIsSending(false);
+    }
+    setIsSending(false);
     setSubmitted(true);
   };
 
@@ -165,8 +175,8 @@ export default function PredictionForm() {
         onChange={(e) => setPrediction(e.target.value)}
         type="number"
       />
-      <Button onClick={handleSubmit} disabled={!prediction}>
-        Submit Prediction
+      <Button onClick={handleSubmit} disabled={!prediction || isSending}>
+        {isSending ? 'Submiting' : 'Submit Prediction'}
       </Button>
     </div>
   );
