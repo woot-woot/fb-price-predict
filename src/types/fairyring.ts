@@ -50,6 +50,7 @@ type Result = {
   block: {
     header: Header;
     data: Data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     evidence: { evidence: any[] };
     last_commit: LastCommit;
   };
