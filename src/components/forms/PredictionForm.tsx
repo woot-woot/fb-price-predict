@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { FAIRYRING_ENV, PUBLIC_ENVIRONMENT } from '@/constant/env';
 import { useClient } from '@/hooks/fairyring/useClient';
 import { useKeysharePubKey } from '@/hooks/fairyring/useKeysharePubKey';
-import { getNextFridayDeadline } from '@/lib/utils';
+import { getCurrentBlockHeight } from '@/services/fairyring/block';
 import { encryptSignedTx, signOfflineWithCustomNonce } from '@/services/fairyring/sign';
 import { Amount } from '@/types/fairyring';
 import { useAccount } from 'graz';
@@ -29,11 +29,10 @@ export default function PredictionForm() {
     if (!account) return;
 
     const address = account.bech32Address;
+    const currentBlockHeight = await getCurrentBlockHeight();
 
-    // const SUBMIT_ANSWER_DEADLINE = 300; // ! UPDATE
-    // const targetHeight = request.startBlock + SUBMIT_ANSWER_DEADLINE; // ! correct targetHeight?
-
-    const targetHeight = getNextFridayDeadline().getTime() / 1000;
+    const SUBMIT_ANSWER_DEADLINE = 400000; // ! UPDATE
+    const targetHeight = currentBlockHeight + SUBMIT_ANSWER_DEADLINE; // ! correct targetHeight?
 
     console.log(targetHeight);
     let nonceUsing = 0;
@@ -138,6 +137,8 @@ export default function PredictionForm() {
         gas: '500000',
       },
     });
+
+    console.log(txResult);
     if (txResult.code) {
       throw new Error(txResult.rawLog);
     }
@@ -156,13 +157,14 @@ export default function PredictionForm() {
     try {
       await submitOnChain({ prediction: parseFloat(prediction), startBlock: 0 });
       localStorage.setItem('btc-prediction-submitted', 'true');
+      setSubmitted(true);
     } catch (error) {
       console.error('failed to submit', error);
+      localStorage.removeItem('btc-prediction-submitted');
+      setSubmitted(false);
     } finally {
       setIsSending(false);
     }
-    setIsSending(false);
-    setSubmitted(true);
   };
 
   if (submitted) return <div className="text-green-500">✅ Prediction submitted!</div>;
